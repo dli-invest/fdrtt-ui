@@ -38,7 +38,7 @@
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"ms-python.python",
-				"ms-python.vscode-pylance"
+				// "ms-python.vscode-pylance"
 			]
 		}
 	},
@@ -53,9 +53,9 @@
 	"remoteUser": "vscode",
 	"features": {
 		"git": "latest",
-		"github-cli": "latest",
-		"golang": "1.18",
-		"powershell": "7.1",
-		"dotnet": "6.0"
+		// "github-cli": "latest",
+		// "golang": "1.18",
+		// "powershell": "7.1",
+		// "dotnet": "6.0"
 	}
 }
