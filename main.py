@@ -2,46 +2,48 @@ import requests
 import databutton as db
 import pandas as pd
 import streamlit as st
+import spacy_streamlit
+from utils import connect_to_db
 
 
-@db.apps.streamlit("/hackernews-data", name="Data from hackernews")
-def show_hackernews_data():
-    st.title("Hackernews data")
-    st.dataframe(db.storage.dataframes.get("hackernews-data"))
+DEFAULT_MODEL = "en_core_web_sm"
+# DESCRIPTION = """**Explore trained [spaCy v3.0](https://nightly.spacy.io) pipelines**"""
 
 
+@db.apps.streamlit("/livestream-nlp", name="Data from livestream")
+def show_livestream_nlp():
+    option = st.selectbox(
+     'What livestream do you want to use?',
+     ("test", "dp8PhLsUcFE",))
+    # TODO for iteration 2 allow user to specific video id
+    st.title(f"Livestream nlp for {option}")
+    # st link to dp8PhLsUcFE
+    st.markdown("https://www.youtube.com/watch?v=dp8PhLsUcFE")
+    old_df = db.storage.dataframes.get("livestream-nlp")
+    st.dataframe(old_df)
+    # spacy_streamlit visulization for last 3 text rows in old_df with column text
+    last_3_rows = "\n".join(old_df.head(3)["text"])
+    spacy_streamlit.visualize(
+        [DEFAULT_MODEL],
+        default_model=DEFAULT_MODEL,
+        visualizers=["ner"],
+        # show_visualizer_select=True,
+        # sidebar_description=DESCRIPTION,
+        default_text=last_3_rows,
+        show_json_doc=False,
+        show_meta=False,
+        show_config=False,
+        # show_logo = False,
+    )
 
-# Every 30 seconds
-@db.jobs.repeat_every(seconds=30, name="Check hackernews")
-def fetch_hackernews_data():
-    # Fetch newest post ids from HN
-    response = requests.get("https://hacker-news.firebaseio.com/v0/newstories.json")
-    ids = response.json()
+# Every 5 minutes
 
-    # Get the actual posts
-    posts = [
-        requests.get(
-            f"https://hacker-news.firebaseio.com/v0/item/{post_id}.json?print=pretty"
-        ).json()
-        # Only get data for the latest 3
-        for post_id in ids[:3]
-    ]
 
-    # Get the current list of posts
-    # dataframes.get(key) will return an empty dataframe if the key does not exist
-    # If you want to handle this as an exception (FileNotFoundError), pass ignore_not_found=False
-    current = db.storage.dataframes.get("hackernews-data")
-    if len(current) == 0:
-        new_posts = posts
-    else:
-        new_posts = [
-            post for post in posts if len(current.loc[current["id"] == post["id"]]) == 0
-        ]
-    df = pd.DataFrame.from_records(new_posts)
-
-    # Add the new posts
-    new_df = pd.concat([current, df], ignore_index=True)
-
+@db.jobs.repeat_every(seconds=5*60, name="Check mysql")
+def fetch_sql_data():
+    # find all results from dp8PhLsUcFE within the last day
+    query = "SELECT * FROM dp8PhLsUcFE WHERE created_at > DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 DAY) ORDER BY created_at DESC"
+    # Dont care about previous data
+    new_df = pd.read_sql(query, con=connect_to_db())
     # Store the data
-    db.storage.dataframes.put(new_df, "hackernews-data")
-    print(f"Created {len(new_posts)} records")
+    db.storage.dataframes.put(new_df, "livestream-nlp")
