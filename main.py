@@ -22,8 +22,7 @@ def show_livestream_nlp():
     old_df = db.storage.dataframes.get("livestream-nlp")
     st.dataframe(old_df)
     # spacy_streamlit visulization for last 3 text rows in old_df with column text
-    last_3_rows = "\n".join(old_df.tail(3)["text"])
-    print(last_3_rows)
+    last_3_rows = "\n".join(old_df.head(3)["text"])
     spacy_streamlit.visualize(
         [DEFAULT_MODEL],
         default_model=DEFAULT_MODEL,

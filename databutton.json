@@ -1,6 +1,6 @@
 {
   "uid": "ed37e6fd-d70c-4466-8332-008508a4494d",
-  "name": "fdrtt-ui",
+  "name": "fdrtt",
   "exclude": [
     "venv",
     ".venv",
